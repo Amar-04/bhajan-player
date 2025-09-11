@@ -2,7 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Tabs } from "expo-router";
 import { View, ActivityIndicator, TouchableOpacity  } from "react-native";
-import { useAuth } from "../../context/AuthContext"; // Adjust path as needed
+import { useAuth } from "../../context/AuthContext"; 
 import { router } from "expo-router";
 
 const TabBg = () => (
@@ -17,10 +17,10 @@ const TabBg = () => (
 export default function TabsLayout() {
   const { role, loading } = useAuth();
   
-  // Helper function to check if user is admin
+  
   const isAdmin = () => role === "admin";
 
-  // Show loading while checking auth state
+  
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -45,7 +45,7 @@ export default function TabsLayout() {
           tabBarLabelStyle: { fontFamily: "Mukta_600SemiBold" },
         }}
       >
-        {/* Always visible tabs for both users and admins */}
+        
         <Tabs.Screen
           name="bhajan-categories"
           options={{
@@ -73,7 +73,7 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="library-books" size={size} color={color} />
             ),
-            href: isAdmin() ? "/lyrics-categories" : null, // Hide tab if not admin
+            href: isAdmin() ? "/lyrics-categories" : null, 
           }}
         />
         <Tabs.Screen
@@ -83,7 +83,7 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="description" size={size} color={color} />
             ),
-            href: isAdmin() ? "/all-lyrics" : null, // Hide tab if not admin
+            href: isAdmin() ? "/all-lyrics" : null, 
           }}
         />
       </Tabs>

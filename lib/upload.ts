@@ -1,4 +1,3 @@
-// lib/upload.ts
 import * as FileSystem from "expo-file-system";
 import { supabase } from "./supabase";
 

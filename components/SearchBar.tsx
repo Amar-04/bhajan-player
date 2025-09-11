@@ -18,7 +18,7 @@ export default function SearchBar({
         width: width * 0.91,
         alignSelf: "center",
         marginTop: 20,
-        height: 48, // 👈 fixed height (same on iOS & Android)
+        height: 48, //  fixed height (same on iOS & Android)
       }}
       className="mb-4 flex-row items-center bg-card rounded-2xl px-3"
     >
@@ -30,8 +30,8 @@ export default function SearchBar({
         value={value}
         onChangeText={onChangeText}
         style={{
-          paddingVertical: 0, // 👈 prevents iOS from shrinking height
-          height: "100%", // 👈 makes TextInput fill parent height
+          paddingVertical: 0, //  prevents iOS from shrinking height
+          height: "100%", //  makes TextInput fill parent height
         }}
       />
     </View>

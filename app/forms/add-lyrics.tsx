@@ -11,7 +11,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { router } from "expo-router";
 import Screen from "../../components/Screen";
-import { Picker } from "@react-native-picker/picker";
+import RNPickerSelect from 'react-native-picker-select';
 
 export default function AddLyrics() {
   const [title, setTitle] = useState("");
@@ -21,12 +21,11 @@ export default function AddLyrics() {
   const [categories, setCategories] = useState<any[]>([]);
   const [fetching, setFetching] = useState(true);
 
-  // fetch categories for dropdown
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const { data, error } = await supabase
-          .from("lyrics_categories") // 👈 use lyrics_categories
+          .from("lyrics_categories")
           .select("id, name")
           .order("name", { ascending: true });
 
@@ -48,9 +47,11 @@ export default function AddLyrics() {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from("lyrics")
-        .insert({ title, category_id: categoryId, content }); // 👈 category_id references lyrics_categories.id
+      const { error } = await supabase.from("lyrics").insert({
+        title,
+        category_id: categoryId,
+        content,
+      });
       if (error) throw error;
       Alert.alert("Success", "Lyrics added!");
       router.back();
@@ -60,6 +61,12 @@ export default function AddLyrics() {
       setLoading(false);
     }
   };
+
+  // Format categories for react-native-picker-select
+  const pickerItems = categories.map(cat => ({
+    label: cat.name,
+    value: cat.id
+  }));
 
   return (
     <Screen title="Add Lyrics" back>
@@ -76,20 +83,40 @@ export default function AddLyrics() {
           className="w-full border border-gray-300 bg-white rounded-xl px-4 py-3 mb-4 text-lg"
         />
 
-        {/* Category dropdown */}
+        {/* Category Dropdown */}
         {fetching ? (
           <ActivityIndicator size="small" color="#fff" className="mb-4" />
         ) : (
           <View className="w-full border border-gray-300 bg-white rounded-xl mb-4">
-            <Picker
-              selectedValue={categoryId}
-              onValueChange={(val) => setCategoryId(val)}
-            >
-              <Picker.Item label="Select Category" value="" />
-              {categories.map((c) => (
-                <Picker.Item key={c.id} label={c.name} value={c.id} />
-              ))}
-            </Picker>
+            <RNPickerSelect
+              onValueChange={(value) => setCategoryId(value)}
+              items={pickerItems}
+              placeholder={{
+                label: 'Select Category',
+                value: null,
+                color: '#999',
+              }}
+              style={{
+                inputIOS: {
+                  fontSize: 18,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  color: 'black',
+                },
+                inputAndroid: {
+                  fontSize: 18,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  color: 'black',
+                },
+                placeholder: {
+                  color: '#999',
+                  fontSize: 18,
+                },
+              }}
+              value={categoryId}
+              useNativeAndroidPickerStyle={false}
+            />
           </View>
         )}
 
@@ -105,7 +132,7 @@ export default function AddLyrics() {
           style={{ minHeight: 180 }}
         />
 
-        {/* Submit button */}
+        {/* Submit Button */}
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={loading}

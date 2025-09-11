@@ -12,7 +12,7 @@ import { supabase } from "../../lib/supabase";
 import { router } from "expo-router";
 import Screen from "../../components/Screen";
 import { uploadFileToMediaBucket } from "../../lib/upload";
-import { Picker } from "@react-native-picker/picker";
+import RNPickerSelect from 'react-native-picker-select';
 
 export default function AddBhajan() {
   const [title, setTitle] = useState("");
@@ -24,11 +24,13 @@ export default function AddBhajan() {
   // Load categories from Supabase
   useEffect(() => {
     const fetchCategories = async () => {
-      const { data, error } = await supabase.from("categories").select("*");
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name");
       if (error) {
         Alert.alert("Error", error.message);
       } else {
-        setCategories(data);
+        setCategories(data || []);
       }
     };
     fetchCategories();
@@ -64,9 +66,16 @@ export default function AddBhajan() {
     }
   };
 
+  // Format categories for react-native-picker-select
+  const pickerItems = categories.map(cat => ({
+    label: cat.name,
+    value: cat.id
+  }));
+
   return (
     <Screen title="Add Bhajan" back>
       <View className="flex-1 items-center justify-center px-6">
+        {/* Title */}
         <TextInput
           placeholder="Bhajan Title"
           placeholderTextColor="#999"
@@ -80,18 +89,39 @@ export default function AddBhajan() {
           <ActivityIndicator size="large" color="#fff" />
         ) : (
           <View className="w-full border border-gray-300 bg-white rounded-xl mb-6">
-            <Picker
-              selectedValue={categoryId}
-              onValueChange={(itemValue) => setCategoryId(itemValue)}
-            >
-              <Picker.Item label="Select Category" value="" />
-              {categories.map((cat) => (
-                <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-              ))}
-            </Picker>
+            <RNPickerSelect
+              onValueChange={(value) => setCategoryId(value)}
+              items={pickerItems}
+              placeholder={{
+                label: 'Select Category',
+                value: null,
+                color: '#999',
+              }}
+              style={{
+                inputIOS: {
+                  fontSize: 18,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  color: 'black',
+                },
+                inputAndroid: {
+                  fontSize: 18,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  color: 'black',
+                },
+                placeholder: {
+                  color: '#999',
+                  fontSize: 18,
+                },
+              }}
+              value={categoryId}
+              useNativeAndroidPickerStyle={false}
+            />
           </View>
         )}
 
+        {/* Audio Upload */}
         <TouchableOpacity
           onPress={pickAudio}
           className="w-full bg-white py-4 rounded-xl mb-4"
@@ -101,6 +131,7 @@ export default function AddBhajan() {
           </Text>
         </TouchableOpacity>
 
+        {/* Submit */}
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={loading}
