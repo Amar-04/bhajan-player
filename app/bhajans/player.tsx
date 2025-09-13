@@ -1,10 +1,10 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import { Audio } from "expo-av";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Text, TouchableOpacity, View, ActivityIndicator, Alert } from "react-native";
+import { ActivityIndicator, Alert, Image, Text, TouchableOpacity, View } from "react-native";
 import Screen from "../../components/Screen";
+import { useAudio } from "../../context/AudioProvider"; //  use global audio
 import { supabase } from "../../lib/supabase";
 
 function formatTime(ms: number) {
@@ -21,10 +21,8 @@ export default function PlayerScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(1);
+  //  from global audio context
+  const { currentTrack, isPlaying, position, duration, playTrack, togglePlay, seek } = useAudio();
 
   // Fetch bhajans from Supabase
   useEffect(() => {
@@ -42,6 +40,11 @@ export default function PlayerScreen() {
         // Find index of the bhajan user tapped
         const startIndex = data?.findIndex((b) => b.id === id) ?? 0;
         setCurrentIndex(startIndex >= 0 ? startIndex : 0);
+
+        // 👇 Start playing it globally
+        if (data && data[startIndex]) {
+          playTrack(data[startIndex]);
+        }
       } catch (err: any) {
         Alert.alert("Error", err.message);
       } finally {
@@ -54,69 +57,20 @@ export default function PlayerScreen() {
 
   const item = bhajans[currentIndex];
 
-  // Load / Reload sound when track changes
-  useEffect(() => {
-    let soundObj: Audio.Sound;
-
-    async function loadSound() {
-      if (!item?.audio_url) return;
-
-      if (sound) {
-        await sound.unloadAsync();
-        setSound(null);
-      }
-
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: item.audio_url }
-      );
-      soundObj = newSound;
-      setSound(newSound);
-
-      const status = await newSound.getStatusAsync();
-      if (status.isLoaded) setDuration(status.durationMillis || 1);
-
-      newSound.setOnPlaybackStatusUpdate((s) => {
-        if (s.isLoaded) {
-          setPosition(s.positionMillis);
-          setDuration(s.durationMillis || 1);
-          setIsPlaying(s.isPlaying);
-
-          // auto skip to next when finished
-          if (s.didJustFinish) {
-            handleNext();
-          }
-        }
-      });
-
-      await newSound.playAsync(); // autoplay
-    }
-
-    if (item) loadSound();
-
-    return () => {
-      if (soundObj) {
-        soundObj.unloadAsync();
-      }
-    };
-  }, [currentIndex, bhajans]);
-
-  const togglePlay = async () => {
-    if (!sound) return;
-    isPlaying ? await sound.pauseAsync() : await sound.playAsync();
-  };
-
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev < bhajans.length - 1 ? prev + 1 : 0));
+    setCurrentIndex((prev) => {
+      const nextIndex = prev < bhajans.length - 1 ? prev + 1 : 0;
+      playTrack(bhajans[nextIndex]); //  update global player
+      return nextIndex;
+    });
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : bhajans.length - 1));
-  };
-
-  const handleSeek = async (value: number) => {
-    if (sound) {
-      await sound.setPositionAsync(value);
-    }
+    setCurrentIndex((prev) => {
+      const prevIndex = prev > 0 ? prev - 1 : bhajans.length - 1;
+      playTrack(bhajans[prevIndex]); //  update global player
+      return prevIndex;
+    });
   };
 
   if (loading || !item) {
@@ -158,7 +112,7 @@ export default function PlayerScreen() {
           minimumTrackTintColor="#FFB300"
           maximumTrackTintColor="#FFFFFF55"
           thumbTintColor="#FFB300"
-          onSlidingComplete={handleSeek}
+          onSlidingComplete={seek} // call global seek
         />
 
         {/* Time display */}

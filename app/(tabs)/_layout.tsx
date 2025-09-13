@@ -1,9 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Tabs } from "expo-router";
-import { View, ActivityIndicator, TouchableOpacity  } from "react-native";
-import { useAuth } from "../../context/AuthContext"; 
-import { router } from "expo-router";
+import { router, Tabs } from "expo-router";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../../context/AuthContext";
 
 const TabBg = () => (
   <LinearGradient
@@ -38,7 +37,7 @@ export default function TabsLayout() {
           tabBarActiveTintColor: "yellow",
           tabBarInactiveTintColor: "gold",
           tabBarStyle: {
-            height: 100,
+            height: 90,
             borderTopWidth: 0,
             backgroundColor: "transparent",
           },
